@@ -1,0 +1,68 @@
+<html>
+<head>
+  <title>Hackalong Cassidy</title>
+  <style>
+    .attendant {
+      height:250px;
+      display:block;
+    }
+    .pic {
+      height:200px;
+      float:left;
+      padding-right:20px;
+
+    }
+    .name {
+      font-size:1.4em;
+      padding-bottom:10px;
+    }
+    body {
+      font-family:Helvetica;
+    }
+  </style>
+</head>
+<body>
+  <div id="meeter"></div>
+  <script src="jquery.js"></script>
+  <script src="underscore-min.js"></script>
+  <script src="async.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      var getter = function(meetup, callback) {
+        $.ajax({
+          url: "https://api.meetup.com/rsvps.json/?event_id=" + meetup.id + "&key=3727177a4e202a356284f541a55d63",
+          dataType: 'jsonp',
+          success: function(data) { callback(null, {results: data.results, name: meetup.name}); },
+          error: function() { console.log("error", arguments); }
+        });
+      };
+      
+      async.map([{name: "dcjQ", id : "35250372" }, {name : "devops", id : "47635522"}], getter, function(err, results) {
+        var attendants = {};
+        _.each(results, function(meetup){
+          console.log(meetup);
+          _.each(meetup.results, function(rsvp){
+            if (rsvp.response === "yes") {
+              if (attendants[rsvp.id] === undefined) {
+                attendants[rsvp.id] = { name: rsvp.name, photo: rsvp.photo_url, loc: (rsvp.city + ", " + rsvp.state), meetups: [meetup.name] };
+              }
+              else {
+                attendants[rsvp.id].meetups.push(meetup.name);
+              }
+            }
+            
+          });
+        });
+        console.log(attendants);
+        
+        for (x in attendants) {
+          p = attendants[x];
+          $("#meeter").append("<div class='attendant'><img class='pic' src='" + p.photo + "' /><div class='name'>" + p.name + "</div><br/><div class='loc'>" + p.loc + "</div>Meetups: " + p.meetups.join(", ") + "</div>" )
+        }
+      });
+      
+      
+    });
+  </script>
+</body>
+</html>
